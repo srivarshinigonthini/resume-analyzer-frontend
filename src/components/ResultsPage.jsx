@@ -1,8 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import confetti from "canvas-confetti";
 
 export default function ResultsPage({ data, onBack }) {
-  const scoreColor = data.ats_score >= 80 ? "#00ffa3" : data.ats_score >= 60 ? "#ffcc00" : "#ff4d4d";
-  const roleColor = data.role_match_percentage >= 80 ? "#00ffa3" : data.role_match_percentage >= 60 ? "#ffcc00" : "#ff4d4d";
+  const [atsScore, setAtsScore] = useState(0);
+  const [roleScore, setRoleScore] = useState(0);
+
+  useEffect(() => {
+    // Animate scores
+    let atsInterval = setInterval(() => {
+      setAtsScore((prev) => {
+        if (prev >= data.ats_score) { clearInterval(atsInterval); return data.ats_score; }
+        return prev + 1;
+      });
+    }, 20);
+
+    let roleInterval = setInterval(() => {
+      setRoleScore((prev) => {
+        if (prev >= data.role_match_percentage) { clearInterval(roleInterval); return data.role_match_percentage; }
+        return prev + 1;
+      });
+    }, 20);
+
+    // Confetti if high score
+    if (data.ats_score >= 80) {
+      setTimeout(() => {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ["#00ffa3", "#00c3ff", "#ffffff"]
+        });
+      }, 1000);
+    }
+
+    return () => { clearInterval(atsInterval); clearInterval(roleInterval); };
+  }, [data]);
+
+  const scoreColor = atsScore >= 80 ? "#00ffa3" : atsScore >= 60 ? "#ffcc00" : "#ff4d4d";
+  const roleColor = roleScore >= 80 ? "#00ffa3" : roleScore >= 60 ? "#ffcc00" : "#ff4d4d";
 
   const getCourseUrl = (course) => {
     if (course.url && course.url.startsWith("http")) return course.url;
@@ -69,14 +104,14 @@ export default function ResultsPage({ data, onBack }) {
           }}>
             <p style={{ color: "#aaa", fontSize: "12px", marginBottom: "8px", letterSpacing: "1px" }}>ATS SCORE</p>
             <div style={{ fontSize: "64px", fontWeight: "900", color: scoreColor, lineHeight: 1 }}>
-              {data.ats_score}
+              {atsScore}
             </div>
             <div style={{ color: "#777", fontSize: "16px", marginBottom: "12px" }}>/100</div>
             <div style={{ height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "99px" }}>
               <div style={{
-                height: "100%", width: `${data.ats_score}%`,
+                height: "100%", width: `${atsScore}%`,
                 background: `linear-gradient(90deg, ${scoreColor}, #00c3ff)`,
-                borderRadius: "99px"
+                borderRadius: "99px", transition: "width 0.05s"
               }}/>
             </div>
           </div>
@@ -90,14 +125,14 @@ export default function ResultsPage({ data, onBack }) {
           }}>
             <p style={{ color: "#aaa", fontSize: "12px", marginBottom: "8px", letterSpacing: "1px" }}>ROLE MATCH</p>
             <div style={{ fontSize: "64px", fontWeight: "900", color: roleColor, lineHeight: 1 }}>
-              {data.role_match_percentage}
+              {roleScore}
             </div>
             <div style={{ color: "#777", fontSize: "16px", marginBottom: "12px" }}>%</div>
             <div style={{ height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "99px" }}>
               <div style={{
-                height: "100%", width: `${data.role_match_percentage}%`,
+                height: "100%", width: `${roleScore}%`,
                 background: `linear-gradient(90deg, ${roleColor}, #00c3ff)`,
-                borderRadius: "99px"
+                borderRadius: "99px", transition: "width 0.05s"
               }}/>
             </div>
           </div>
@@ -131,7 +166,7 @@ export default function ResultsPage({ data, onBack }) {
             borderRadius: "20px", padding: "24px"
           }}>
             <h2 style={{ color: "#ff4d4d", fontSize: "15px", fontWeight: "700", marginBottom: "16px" }}>
-              ❌ Missing Skills for Target Role
+              ❌ Missing Skills
             </h2>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {data.missing_skills?.map((skill, i) => (
@@ -144,6 +179,51 @@ export default function ResultsPage({ data, onBack }) {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Skill Progress Bars */}
+        <div style={{
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "20px", padding: "24px", marginBottom: "20px"
+        }}>
+          <h2 style={{ color: "#fff", fontSize: "15px", fontWeight: "700", marginBottom: "20px" }}>
+            📊 Skill Match Analysis
+          </h2>
+          {data.skills_found?.slice(0, 5).map((skill, i) => (
+            <div key={i} style={{ marginBottom: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "#ccc", fontSize: "13px" }}>{skill}</span>
+                <span style={{ color: "#00ffa3", fontSize: "13px", fontWeight: "600" }}>✓ Found</span>
+              </div>
+              <div style={{ height: "6px", background: "rgba(255,255,255,0.05)", borderRadius: "99px" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${80 + Math.random() * 20}%`,
+                  background: "linear-gradient(90deg, #00ffa3, #00c3ff)",
+                  borderRadius: "99px",
+                  transition: "width 1s ease"
+                }}/>
+              </div>
+            </div>
+          ))}
+          {data.missing_skills?.slice(0, 3).map((skill, i) => (
+            <div key={i} style={{ marginBottom: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ color: "#ccc", fontSize: "13px" }}>{skill}</span>
+                <span style={{ color: "#ff4d4d", fontSize: "13px", fontWeight: "600" }}>✗ Missing</span>
+              </div>
+              <div style={{ height: "6px", background: "rgba(255,255,255,0.05)", borderRadius: "99px" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${10 + Math.random() * 30}%`,
+                  background: "linear-gradient(90deg, #ff4d4d, #ff8800)",
+                  borderRadius: "99px",
+                  transition: "width 1s ease"
+                }}/>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Strengths & Improvements */}
