@@ -1,32 +1,32 @@
 import React, { useState } from "react";
 
-export default function UploadPage({ onResult }) {
+export default function UploadPage({ onResult, onLoading }) {
   const [file, setFile] = useState(null);
   const [role, setRole] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleUpload = async () => {
     if (!file) { setError("Please select a PDF file!"); return; }
     if (!role) { setError("Please enter the role you are applying for!"); return; }
-    setLoading(true);
     setError("");
+    onLoading(true);
 
     const formData = new FormData();
     formData.append("file", file);
     formData.append("role", role);
 
     try {
-      const res = await fetch("https://resume-analyzer-backend-production-6455.up.railway.app/api/resume/upload",{
+      const res = await fetch("https://resume-analyzer-backend-production-6455.up.railway.app/api/resume/upload", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
+      onLoading(false);
       onResult(JSON.parse(data.analysis));
     } catch (err) {
+      onLoading(false);
       setError("Something went wrong. Please try again.");
     }
-    setLoading(false);
   };
 
   return (
@@ -57,7 +57,6 @@ export default function UploadPage({ onResult }) {
         backdropFilter: "blur(20px)",
         boxShadow: "0 0 60px rgba(0,255,163,0.05)"
       }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚡</div>
           <h1 style={{
@@ -71,7 +70,6 @@ export default function UploadPage({ onResult }) {
           </p>
         </div>
 
-        {/* Role Input */}
         <div style={{ marginBottom: "20px" }}>
           <label style={{ color: "#aaa", fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "8px" }}>
             🎯 What role are you applying for?
@@ -92,7 +90,6 @@ export default function UploadPage({ onResult }) {
           />
         </div>
 
-        {/* Upload Box */}
         <div style={{
           border: "2px dashed rgba(0,255,163,0.3)",
           borderRadius: "16px", padding: "40px 20px",
@@ -133,17 +130,15 @@ export default function UploadPage({ onResult }) {
 
         <button
           onClick={handleUpload}
-          disabled={loading}
           style={{
             width: "100%", padding: "16px",
-            background: loading ? "rgba(0,255,163,0.2)" : "linear-gradient(90deg, #00ffa3, #00c3ff)",
+            background: "linear-gradient(90deg, #00ffa3, #00c3ff)",
             border: "none", borderRadius: "12px",
-            color: loading ? "#00ffa3" : "#000",
-            fontSize: "16px", fontWeight: "700",
-            cursor: loading ? "not-allowed" : "pointer"
+            color: "#000", fontSize: "16px", fontWeight: "700",
+            cursor: "pointer"
           }}
         >
-          {loading ? "⚡ Analyzing..." : "Analyze Resume →"}
+          Analyze Resume →
         </button>
       </div>
     </div>
