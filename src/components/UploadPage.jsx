@@ -129,8 +129,9 @@ export default function UploadPage({ onResult, onLoading }) {
         )}
 
         <button
-          onClick={handleUpload}
-          style={{
+         type="button"
+         onClick={handleUpload}
+         style={{
             width: "100%", padding: "16px",
             background: "linear-gradient(90deg, #00ffa3, #00c3ff)",
             border: "none", borderRadius: "12px",
