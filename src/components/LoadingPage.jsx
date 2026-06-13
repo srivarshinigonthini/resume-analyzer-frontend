@@ -1,146 +1,94 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-export default function UploadPage({ onResult, onLoading }) {
-  const [file, setFile] = useState(null);
-  const [role, setRole] = useState("");
-  const [error, setError] = useState("");
+const steps = [
+  "Reading your resume...",
+  "Analyzing skills & experience...",
+  "Matching with role requirements...",
+  "Generating AI feedback...",
+  "Almost done...",
+];
 
-  const handleUpload = async () => {
-    if (!file) { setError("Please select a PDF file!"); return; }
-    if (!role) { setError("Please enter the role you are applying for!"); return; }
-    setError("");
-    onLoading(true);
+export default function LoadingPage() {
+  const [stepIndex, setStepIndex] = useState(0);
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("role", role);
-
-    try {
-      const res = await fetch("https://resume-analyzer-backend-production-6455.up.railway.app/api/resume/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      onLoading(false);
-      onResult(JSON.parse(data.analysis));
-    } catch (err) {
-      onLoading(false);
-      setError("Something went wrong. Please try again.");
-    }
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a0a0a 0%, #0d1117 50%, #0a0a0a 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontFamily: "'Segoe UI', sans-serif", padding: "20px"
+      background: "#0b0d14",
+      fontFamily: "'Inter', 'Segoe UI', sans-serif",
+      color: "#f1f5f9",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
     }}>
+      {/* Glow blobs */}
       <div style={{
-        position: "fixed", top: "10%", left: "10%",
-        width: "300px", height: "300px",
-        background: "radial-gradient(circle, rgba(0,255,163,0.08) 0%, transparent 70%)",
-        pointerEvents: "none"
-      }}/>
-      <div style={{
-        position: "fixed", bottom: "10%", right: "10%",
+        position: "fixed", top: "-100px", left: "-100px",
         width: "400px", height: "400px",
-        background: "radial-gradient(circle, rgba(0,150,255,0.08) 0%, transparent 70%)",
-        pointerEvents: "none"
-      }}/>
-
+        background: "radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
       <div style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "24px", padding: "48px",
-        width: "100%", maxWidth: "480px",
-        backdropFilter: "blur(20px)",
-        boxShadow: "0 0 60px rgba(0,255,163,0.05)"
-      }}>
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚡</div>
-          <h1 style={{
-            fontSize: "32px", fontWeight: "800",
-            background: "linear-gradient(90deg, #00ffa3, #00c3ff)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            marginBottom: "8px"
-          }}>Resume Analyzer</h1>
-          <p style={{ color: "#555", fontSize: "14px" }}>
-            AI-powered resume analysis & career recommendations
-          </p>
-        </div>
+        position: "fixed", bottom: "-80px", right: "-80px",
+        width: "350px", height: "350px",
+        background: "radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
 
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ color: "#aaa", fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "8px" }}>
-            🎯 What role are you applying for?
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Data Analyst, Full Stack Developer..."
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={{
-              width: "100%", padding: "14px 16px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(0,255,163,0.2)",
-              borderRadius: "12px", color: "#fff",
-              fontSize: "14px", outline: "none",
-              boxSizing: "border-box"
-            }}
-          />
-        </div>
+      <div style={{ textAlign: "center", padding: "40px" }}>
 
+        {/* Spinner */}
         <div style={{
-          border: "2px dashed rgba(0,255,163,0.3)",
-          borderRadius: "16px", padding: "40px 20px",
-          textAlign: "center", marginBottom: "24px",
-          background: "rgba(0,255,163,0.02)"
+          width: "72px", height: "72px",
+          border: "3px solid rgba(99,102,241,0.15)",
+          borderTop: "3px solid #6366f1",
+          borderRadius: "50%",
+          margin: "0 auto 32px",
+          animation: "spin 0.9s linear infinite",
+        }} />
+
+        {/* Title */}
+        <h2 style={{
+          fontSize: "24px", fontWeight: "800",
+          letterSpacing: "-0.03em", marginBottom: "12px",
+          background: "linear-gradient(90deg, #6366f1, #22d3ee)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
         }}>
-          <div style={{ fontSize: "40px", marginBottom: "12px" }}>📄</div>
-          <p style={{ color: "#555", marginBottom: "16px", fontSize: "14px" }}>
-            Upload your resume PDF
-          </p>
-          <input
-            type="file" accept=".pdf"
-            onChange={(e) => setFile(e.target.files[0])}
-            style={{ display: "none" }} id="fileInput"
-          />
-          <label htmlFor="fileInput" style={{
-            cursor: "pointer",
-            background: "rgba(0,255,163,0.1)",
-            color: "#00ffa3", padding: "10px 24px",
-            borderRadius: "8px",
-            border: "1px solid rgba(0,255,163,0.3)",
-            fontSize: "14px", fontWeight: "600"
-          }}>
-            Choose PDF File
-          </label>
-          {file && (
-            <p style={{ marginTop: "12px", color: "#00ffa3", fontSize: "13px" }}>
-              ✅ {file.name}
-            </p>
-          )}
+          Analyzing your resume
+        </h2>
+
+        {/* Current step */}
+        <p style={{
+          color: "#64748b", fontSize: "15px",
+          minHeight: "24px", transition: "all 0.3s ease",
+        }}>
+          {steps[stepIndex]}
+        </p>
+
+        {/* Step dots */}
+        <div style={{
+          display: "flex", justifyContent: "center", gap: "8px", marginTop: "32px",
+        }}>
+          {steps.map((_, i) => (
+            <div key={i} style={{
+              width: i === stepIndex ? "20px" : "6px",
+              height: "6px",
+              borderRadius: "99px",
+              background: i <= stepIndex ? "#6366f1" : "rgba(255,255,255,0.08)",
+              transition: "all 0.4s ease",
+            }} />
+          ))}
         </div>
-
-        {error && (
-          <p style={{ color: "#ff4d4d", textAlign: "center", marginBottom: "16px", fontSize: "13px" }}>
-            {error}
-          </p>
-        )}
-
-        <button
-          onClick={handleUpload}
-          style={{
-            width: "100%", padding: "16px",
-            background: "linear-gradient(90deg, #00ffa3, #00c3ff)",
-            border: "none", borderRadius: "12px",
-            color: "#000", fontSize: "16px", fontWeight: "700",
-            cursor: "pointer"
-          }}
-        >
-          Analyze Resume →
-        </button>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

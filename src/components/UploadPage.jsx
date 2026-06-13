@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
- 
+
 export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft, user, onLogout }) {
   const [file, setFile] = useState(null);
   const [role, setRole] = useState("");
@@ -8,7 +8,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef();
- 
+
   const handleFile = (f) => {
     if (f && f.type === "application/pdf") {
       setFile(f);
@@ -17,44 +17,56 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
       setError("Only PDF files are supported.");
     }
   };
- 
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragging(false);
     handleFile(e.dataTransfer.files[0]);
   };
- 
+
   const handleUpload = async () => {
-  if (!file) { setError("Please select a PDF file."); return; }
-  if (!role) { setError("Please enter the role you are applying for."); return; }
-  const canProceed = checkTrial();
-  if (!canProceed) return;
+    if (!file) { setError("Please select a PDF file!"); return; }
+    if (!role) { setError("Please enter the role you are applying for!"); return; }
 
-  setError("");
-  setLoading(true);
-  onLoading(true);
+    const allowed = checkTrial(onResult, onLoading);
+    if (!allowed) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("role", role);
+    setError("");
+    setLoading(true);
+    onLoading(true);
 
-  try {
-    const res = await fetch("https://resume-analyzer-backend-production-6455.up.railway.app/api/resume/upload", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await res.json();
-    onResult(JSON.parse(data.analysis)); // ✅ result first
-    onLoading(false);                     // ✅ then stop loading
-    setLoading(false);
-  } catch (err) {
-    onLoading(false);
-    setLoading(false);
-    setError("Something went wrong. Please try again.");
-  }
-};
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("role", role);
+
+    try {
+      const res = await fetch("https://resume-analyzer-backend-production-6455.up.railway.app/api/resume/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || `Server error: ${res.status}`);
+      }
+
+      const parsed = typeof data.analysis === "string"
+        ? JSON.parse(data.analysis)
+        : data.analysis;
+
+      onResult(parsed);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError("Error: " + err.message);
+    } finally {
+      setLoading(false);
+      onLoading(false);
+    }
+  };
+
   const isPremium = trialsLeft === "unlimited";
- 
+
   return (
     <div style={{
       minHeight: "100vh",
@@ -75,7 +87,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
         background: "radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%)",
         pointerEvents: "none",
       }} />
- 
+
       {/* Top nav */}
       <div style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
@@ -84,7 +96,6 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
         background: "rgba(11,13,20,0.8)", backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{
             width: "32px", height: "32px",
@@ -95,10 +106,8 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
           }}>⚡</div>
           <span style={{ fontWeight: "700", fontSize: "15px", letterSpacing: "-0.01em" }}>ResumeAI</span>
         </div>
- 
-        {/* Right side */}
+
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          {/* Trial badge */}
           <div style={{
             padding: "5px 12px", borderRadius: "99px", fontSize: "12px", fontWeight: "600",
             background: isPremium ? "rgba(99,102,241,0.15)" : trialsLeft > 0 ? "rgba(251,191,36,0.1)" : "rgba(239,68,68,0.1)",
@@ -107,8 +116,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
           }}>
             {isPremium ? "⭐ Premium" : `${trialsLeft} trial${trialsLeft !== 1 ? "s" : ""} left`}
           </div>
- 
-          {/* User */}
+
           <div style={{
             display: "flex", alignItems: "center", gap: "8px",
             padding: "6px 12px",
@@ -128,7 +136,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
               {user?.name || user?.email}
             </span>
           </div>
- 
+
           <button type="button" onClick={onLogout} style={{
             background: "transparent",
             border: "1px solid rgba(255,255,255,0.08)",
@@ -140,15 +148,14 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
           </button>
         </div>
       </div>
- 
+
       {/* Main content */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "center",
         minHeight: "100vh", padding: "100px 24px 40px",
       }}>
         <div style={{ width: "100%", maxWidth: "520px" }}>
- 
-          {/* Page header */}
+
           <div style={{ textAlign: "center", marginBottom: "40px" }}>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: "6px",
@@ -175,16 +182,14 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
               Upload your PDF and get instant feedback tailored to your target role.
             </p>
           </div>
- 
-          {/* Card */}
+
           <div style={{
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "20px", padding: "36px",
             backdropFilter: "blur(20px)",
           }}>
- 
-            {/* Role input */}
+
             <div style={{ marginBottom: "24px" }}>
               <label style={{
                 display: "block", fontSize: "12px", fontWeight: "600",
@@ -212,8 +217,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
                 }}
               />
             </div>
- 
-            {/* Drop zone */}
+
             <div style={{ marginBottom: "24px" }}>
               <label style={{
                 display: "block", fontSize: "12px", fontWeight: "600",
@@ -247,7 +251,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
                   style={{ display: "none" }}
                   onChange={(e) => handleFile(e.target.files[0])}
                 />
- 
+
                 {file ? (
                   <>
                     <div style={{ fontSize: "32px", marginBottom: "10px" }}>📄</div>
@@ -276,8 +280,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
                 )}
               </div>
             </div>
- 
-            {/* Error */}
+
             {error && (
               <div style={{
                 background: "rgba(239,68,68,0.08)",
@@ -289,8 +292,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
                 <span>⚠️</span> {error}
               </div>
             )}
- 
-            {/* Submit */}
+
             <button
               type="button"
               onClick={handleUpload}
@@ -322,8 +324,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
                 </span>
               ) : "Analyze Resume →"}
             </button>
- 
-            {/* Hint */}
+
             {!isPremium && trialsLeft <= 1 && trialsLeft !== "unlimited" && (
               <p style={{ textAlign: "center", color: "#475569", fontSize: "12px", marginTop: "14px" }}>
                 {trialsLeft === 0
@@ -333,8 +334,7 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
               </p>
             )}
           </div>
- 
-          {/* Features row */}
+
           <div style={{
             display: "flex", justifyContent: "center", gap: "24px",
             marginTop: "28px",
@@ -354,9 +354,8 @@ export default function UploadPage({ onResult, onLoading, checkTrial, trialsLeft
           </div>
         </div>
       </div>
- 
+
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
- 

@@ -61,7 +61,7 @@ function App() {
 
   if (!user) return <LoginPage onLogin={handleLogin} />;
   if (showPremium) return <PremiumPage onUpgrade={() => { setShowPremium(false); setUser(JSON.parse(localStorage.getItem("currentUser"))); }} onBack={() => setShowPremium(false)} />;
-  if (loading) return <LoadingPage />;
+  if (loading && !result) return <LoadingPage />;
   if (result) return <ResultsPage data={result} onBack={() => setResult(null)} />;
 
   return (
