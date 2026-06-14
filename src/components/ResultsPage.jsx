@@ -308,8 +308,6 @@ export default function ResultsPage({ data, onBack }) {
       <span>{icon}</span>{children}
     </h2>
   );
-
-  const pad = isMobile ? "0 14px" : "0 24px";
   const gridGap = isMobile ? "12px" : "16px";
 
   return (
